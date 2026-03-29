@@ -3,71 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DISECO - Panel Seguro</title>
+    <title>DISECO - Sistema Optimizado</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        :root {
-            --primary: #00f2fe;
-            --secondary: #4facfe;
-            --bg: #0b0f1a;
-            --card-bg: rgba(30, 41, 59, 0.8);
-            --glass: rgba(255, 255, 255, 0.05);
-        }
-
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: var(--bg);
-            color: #fff;
-            margin: 0;
-            padding-bottom: 90px;
-        }
-
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px; background: rgba(15, 23, 42, 0.9);
-            position: sticky; top: 0; z-index: 500; border-bottom: 1px solid var(--glass);
-        }
-
-        .navbar {
-            position: fixed; bottom: 0; width: 100%;
-            background: rgba(15, 23, 42, 0.95);
-            display: flex; border-top: 1px solid var(--primary); z-index: 1000;
-        }
+        :root { --primary: #00f2fe; --secondary: #4facfe; --bg: #0b0f1a; --card-bg: rgba(30, 41, 59, 0.8); --glass: rgba(255, 255, 255, 0.05); }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 90px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(15, 23, 42, 0.9); position: sticky; top: 0; z-index: 500; border-bottom: 1px solid var(--glass); }
+        .navbar { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.95); display: flex; border-top: 1px solid var(--primary); z-index: 1000; }
         .nav-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-size: 0.75rem; color: #64748b; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
-
         .view { display: none; padding: 20px; animation: fadeIn 0.3s; }
         .view.active { display: block; }
-
-        .card {
-            background: var(--card-bg); border-radius: 15px; padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
-        }
-
-        input, textarea, select, button {
-            width: 100%; padding: 14px; margin: 8px 0;
-            border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white;
-            font-size: 1rem;
-        }
-
-        /* Estilo específico para que los puntos de la contraseña se vean bien */
-        input[type="password"] {
-            letter-spacing: 5px;
-            text-align: center;
-        }
-
+        .card { background: var(--card-bg); border-radius: 15px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px; }
+        input, textarea, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white; font-size: 1rem; }
+        input[type="password"] { letter-spacing: 5px; text-align: center; }
         button { background: linear-gradient(90deg, var(--secondary), var(--primary)); color: #000; font-weight: bold; cursor: pointer; border: none; }
-
-        .task-card {
-            background: var(--glass); padding: 15px; border-radius: 12px; margin-bottom: 10px;
-            display: flex; align-items: center; border-left: 4px solid var(--primary);
-        }
+        .task-card { background: var(--glass); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; border-left: 4px solid var(--primary); }
         .task-card.done { opacity: 0.4; text-decoration: line-through; border-left-color: #00ff88; }
-
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .photo-card { background: var(--glass); border-radius: 10px; overflow: hidden; border: 1px solid var(--primary); }
+        .photo-card { background: var(--glass); border-radius: 10px; overflow: hidden; border: 1px solid var(--primary); position: relative; }
         .photo-card img { width: 100%; aspect-ratio: 1; object-fit: cover; }
         .photo-card p { padding: 8px; margin: 0; font-size: 0.75rem; text-align: center; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body onload="initApp()">
@@ -82,7 +39,7 @@
         <div class="card">
             <input type="file" id="fileInput" accept="image/*" capture="environment">
             <textarea id="photoDesc" placeholder="Descripción del reporte..." rows="2"></textarea>
-            <button onclick="uploadImage()">REGISTRAR</button>
+            <button id="btnUpload" onclick="handleUpload()">REGISTRAR REPORTE</button>
         </div>
     </div>
 
@@ -94,7 +51,6 @@
     <div id="assign" class="view">
         <div id="assign-lock" class="card" style="text-align: center;">
             <h2>🛠️ Admin Panel</h2>
-            <p style="font-size: 0.8rem; opacity: 0.6;">Ingrese código de acceso</p>
             <input type="password" id="accessKey" placeholder="••••" autocomplete="off">
             <button onclick="checkAssignKey()">ENTRAR</button>
         </div>
@@ -104,10 +60,9 @@
                 <select id="userTask">
                     <option value="Carlos">Carlos</option>
                     <option value="Ammy">Ammy</option>
-                    <option value="Usuario 3">Usuario 3</option>
                 </select>
-                <button onclick="createTask()">ASIGNAR</button>
-                <button onclick="lockAssign()" style="background:none; color:gray; border:1px solid gray; margin-top:10px;">SALIR</button>
+                <button onclick="createTask()">ASIGNAR TAREA</button>
+                <button onclick="lockAssign()" style="background:none; color:gray; border:1px solid gray;">SALIR</button>
             </div>
         </div>
     </div>
@@ -115,13 +70,13 @@
     <div id="tasks" class="view">
         <div id="user-selection-zone">
             <div class="card" style="text-align:center;">
-                <h2>📋 Mis Tareas</h2>
+                <h2>📋 Acceso a Tareas</h2>
                 <button onclick="accessTasks('Carlos')">SOY CARLOS</button>
                 <button onclick="accessTasks('Ammy')" style="margin-top:10px;">SOY AMMY</button>
             </div>
         </div>
         <div id="private-task-zone" style="display: none;">
-            <h2 id="taskOwnerTitle">Tareas</h2>
+            <h2 id="taskOwnerTitle">Mis Tareas</h2>
             <div id="taskList"></div>
             <button onclick="exitTasks()" style="background:none; border:1px solid var(--primary); color:var(--primary); margin-top:20px;">CAMBIAR PERFIL</button>
         </div>
@@ -135,31 +90,135 @@
     </nav>
 
 <script>
-    // CARGAR DATOS DE LOCAL STORAGE
-    let allTasks = JSON.parse(localStorage.getItem('diseco_tasks')) || [];
-    let allPhotos = JSON.parse(localStorage.getItem('diseco_photos')) || [];
+    let allTasks = [];
+    let allPhotos = [];
     let loggedUser = localStorage.getItem('diseco_user') || null;
 
     function initApp() {
+        // Cargar datos con seguridad
+        try {
+            allTasks = JSON.parse(localStorage.getItem('diseco_tasks')) || [];
+            allPhotos = JSON.parse(localStorage.getItem('diseco_photos')) || [];
+        } catch(e) {
+            console.error("Error cargando LocalStorage", e);
+            allTasks = []; allPhotos = [];
+        }
+        
         renderGallery();
         if(loggedUser) accessTasks(loggedUser);
     }
 
     function saveData() {
-        localStorage.setItem('diseco_tasks', JSON.stringify(allTasks));
-        localStorage.setItem('diseco_photos', JSON.stringify(allPhotos));
-        localStorage.setItem('diseco_user', loggedUser || "");
+        try {
+            localStorage.setItem('diseco_tasks', JSON.stringify(allTasks));
+            localStorage.setItem('diseco_photos', JSON.stringify(allPhotos));
+            localStorage.setItem('diseco_user', loggedUser || "");
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Memoria Llena', text: 'Hay demasiadas fotos. Borra algunas para seguir guardando.' });
+        }
     }
 
-    function showView(viewId, element) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
-        element.classList.add('active');
-        if(viewId === 'tasks' && loggedUser) renderTasks();
+    // --- COMPRESIÓN DE IMÁGENES (Clave para que no falle) ---
+    async function handleUpload() {
+        const file = document.getElementById('fileInput').files[0];
+        const desc = document.getElementById('photoDesc').value;
+        const btn = document.getElementById('btnUpload');
+
+        if (!file) return Swal.fire('Error', 'Selecciona una foto primero', 'warning');
+
+        btn.innerText = "PROCESANDO...";
+        btn.disabled = true;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800; // Reducimos tamaño para ahorrar espacio
+                let width = img.width;
+                let height = img.height;
+
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Comprimimos al 60% de calidad
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                
+                allPhotos.push({ id: Date.now(), src: compressedBase64, text: desc || "Sin descripción" });
+                saveData();
+                renderGallery();
+                
+                document.getElementById('fileInput').value = "";
+                document.getElementById('photoDesc').value = "";
+                btn.innerText = "REGISTRAR REPORTE";
+                btn.disabled = false;
+                
+                Swal.fire({ icon: 'success', title: 'Reporte Guardado', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
     }
 
-    // --- ACCESO Y TAREAS ---
+    // --- RESTO DE FUNCIONES ---
+    function renderGallery() {
+        const container = document.getElementById('photoContainer');
+        container.innerHTML = "";
+        allPhotos.slice().reverse().forEach(p => {
+            container.innerHTML += `
+                <div class="photo-card">
+                    <img src="${p.src}" onclick="viewFull('${p.src}')">
+                    <p>${p.text}</p>
+                    <div onclick="deletePhoto(${p.id})" style="position:absolute; top:5px; right:5px; background:red; padding:5px; border-radius:50%; font-size:10px; cursor:pointer;">X</div>
+                </div>`;
+        });
+    }
+
+    function deletePhoto(id) {
+        allPhotos = allPhotos.filter(p => p.id !== id);
+        saveData();
+        renderGallery();
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('taskList');
+        container.innerHTML = "";
+        const filtered = allTasks.filter(t => t.user === loggedUser);
+        if(filtered.length === 0) container.innerHTML = "<p style='text-align:center; opacity:0.5;'>Sin tareas asignadas.</p>";
+        filtered.forEach(t => {
+            container.innerHTML += `
+                <div class="task-card ${t.done ? 'done' : ''}">
+                    <div style="flex:1"><b>${t.name}</b></div>
+                    <input type="checkbox" ${t.done ? 'checked disabled' : ''} onclick="markDone(${t.id})" style="width:30px;">
+                </div>`;
+        });
+    }
+
+    function createTask() {
+        const name = document.getElementById('taskName').value;
+        const user = document.getElementById('userTask').value;
+        if (!name) return;
+        allTasks.push({ id: Date.now(), user, name, done: false });
+        document.getElementById('taskName').value = "";
+        saveData();
+        Swal.fire({ icon: 'success', title: 'Tarea Asignada' });
+    }
+
+    function markDone(id) {
+        const task = allTasks.find(t => t.id === id);
+        if(task) {
+            task.done = true;
+            saveData();
+            renderTasks();
+        }
+    }
+
     function accessTasks(user) {
         loggedUser = user;
         document.getElementById('user-selection-zone').style.display = 'none';
@@ -178,75 +237,22 @@
         saveData();
     }
 
-    function createTask() {
-        const name = document.getElementById('taskName').value;
-        const user = document.getElementById('userTask').value;
-        if (!name) return;
-        allTasks.push({ id: Date.now(), user, name, done: false });
-        document.getElementById('taskName').value = "";
-        saveData();
-        Swal.fire({ icon: 'success', title: 'Tarea Asignada', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+    function showView(viewId, element) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        element.classList.add('active');
+        if(viewId === 'tasks' && loggedUser) renderTasks();
     }
 
-    function renderTasks() {
-        const container = document.getElementById('taskList');
-        container.innerHTML = "";
-        const filtered = allTasks.filter(t => t.user === loggedUser);
-        filtered.forEach(t => {
-            container.innerHTML += `
-                <div class="task-card ${t.done ? 'done' : ''}">
-                    <div style="flex:1"><b>${t.name}</b></div>
-                    <input type="radio" ${t.done ? 'checked disabled' : ''} onclick="markDone(${t.id})">
-                </div>`;
-        });
-    }
-
-    function markDone(id) {
-        allTasks.find(t => t.id === id).done = true;
-        saveData();
-        renderTasks();
-    }
-
-    // --- FOTOS ---
-    function uploadImage() {
-        const input = document.getElementById('fileInput');
-        const desc = document.getElementById('photoDesc').value;
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                allPhotos.push({ src: e.target.result, text: desc || "Sin descripción" });
-                saveData();
-                renderGallery();
-                input.value = ""; document.getElementById('photoDesc').value = "";
-                Swal.fire({ icon: 'success', title: 'Reporte Guardado', background: '#1e293b', color: '#fff' });
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function renderGallery() {
-        const container = document.getElementById('photoContainer');
-        container.innerHTML = "";
-        allPhotos.forEach(p => {
-            container.innerHTML += `<div class="photo-card"><img src="${p.src}" onclick="viewFull('${p.src}')"><p>${p.text}</p></div>`;
-        });
-    }
-
-    function viewFull(src) {
-        Swal.fire({ imageUrl: src, background: 'rgba(0,0,0,0.9)', showConfirmButton: false });
-    }
-
-    // --- SEGURIDAD ---
     function checkAssignKey() {
-        const keyVal = document.getElementById('accessKey').value;
-        if (keyVal === "AbCd") {
+        if (document.getElementById('accessKey').value === "AbCd") {
             document.getElementById('assign-lock').style.display = 'none';
             document.getElementById('assign-form').style.display = 'block';
-            document.getElementById('accessKey').value = "";
         } else {
-            Swal.fire({ icon: 'error', title: 'Key Incorrecta', text: 'Acceso denegado' });
-            document.getElementById('accessKey').value = "";
+            Swal.fire({ icon: 'error', title: 'Acceso Denegado' });
         }
+        document.getElementById('accessKey').value = "";
     }
 
     function lockAssign() {
@@ -256,23 +262,18 @@
 
     function openSettings() {
         Swal.fire({
-            title: 'Configuración', background: '#1e293b', color: '#fff', showConfirmButton: false,
-            html: `
-                <button onclick="clearAll()" style="background:#ff4b2b; color:white; padding:15px; width:100%; border-radius:10px; border:none; cursor:pointer;">🔄 Borrar Todo (Reset)</button>
-                <button onclick="shutdownServer()" style="background:#444; color:white; padding:15px; width:100%; border-radius:10px; border:none; margin-top:10px; cursor:pointer;">⚠️ Apagar Servidor</button>`
+            title: 'Opciones', background: '#1e293b', color: '#fff', showConfirmButton: false,
+            html: `<button onclick="clearAll()" style="background:#ff4b2b; color:white;">🔄 Resetear Todo</button>`
         });
     }
 
     function clearAll() {
-        Swal.fire({ title: '¿Borrar datos?', text: "Se eliminarán fotos y tareas permanentemente.", icon: 'warning', showCancelButton: true }).then(r => {
-            if(r.isConfirmed) { localStorage.clear(); location.reload(); }
-        });
+        localStorage.clear();
+        location.reload();
     }
 
-    function shutdownServer() {
-        Swal.fire({ title: 'Cerrando sistema...', timer: 1500, showConfirmButton: false }).then(() => {
-            document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:100px;'>SISTEMA FUERA DE LÍNEA</h1>";
-        });
+    function viewFull(src) {
+        Swal.fire({ imageUrl: src, background: 'rgba(0,0,0,0.9)', showConfirmButton: false });
     }
 </script>
 </body>
