@@ -3,763 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Fotos & Tareas App</title>
+    <title>Gestor de Reportes y Tareas</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        /* Animaciones globales */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --bg: #0f172a;
+            --glass: rgba(255, 255, 255, 0.1);
         }
 
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-        }
-
-        /* Menú de navegación */
-        nav {
-            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-            padding: 18px 15px;
-            display: flex;
-            justify-content: space-around;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .btnMenu {
-            background: rgba(255,255,255,0.2);
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
             color: white;
-            border: none;
-            padding: 12px 15px;
-            border-radius: 30px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            flex: 1;
-            min-width: 120px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .btnMenu.activo {
-            background: white;
-            color: #4facfe;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-
-        .btnMenu:hover {
-            transform: translateY(-2px);
-        }
-
-        /* Pantallas */
-        .pantalla {
-            display: none;
-            padding: 25px 20px;
-            animation: fadeIn 0.5s ease forwards;
-        }
-
-        .pantalla.activa {
-            display: block;
-        }
-
-        /* Pantalla de Inicio */
-        #inicio {
-            text-align: center;
-            padding-top: 40px;
-        }
-
-        #inicio .titulo-principal {
-            background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 35px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        #inicio .imagen-portada {
-            width: 90%;
-            max-width: 350px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            margin-bottom: 35px;
-            transition: all 0.5s ease;
-        }
-
-        #inicio .imagen-portada:hover {
-            transform: scale(1.02);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        }
-
-        #inicio .texto-bienvenida {
-            color: #555;
-            font-size: 18px;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            padding: 0 15px;
-        }
-
-        /* Sección de tareas rápidas en inicio */
-        .tareas-rapidas {
-            background: white;
+            margin: 0;
             padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            animation: fadeIn 0.7s ease forwards;
         }
 
-        .tareas-rapidas h3 {
-            color: #4facfe;
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
+        .container { max-width: 600px; margin: auto; }
 
-        .formulario-rapido {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .fila-formulario {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        #inputTareaRapida {
-            flex: 1;
-            padding: 12px 15px;
-            border: none;
+        /* Estilo Glassmorphism */
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 15px;
-            font-size: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        h2 { border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: none;
             outline: none;
         }
 
-        .selector-asignar {
-            padding: 12px 15px;
-            border: none;
-            border-radius: 15px;
-            font-size: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            background: white;
-        }
-
-        #btnAgregarRapido {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        button {
+            background: linear-gradient(45deg, var(--secondary), var(--primary));
             color: white;
-            border: none;
-            padding: 12px 15px;
-            border-radius: 15px;
-            font-size: 16px;
-            font-weight: 600;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
         }
 
-        #btnAgregarRapido:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(46, 229, 157, 0.4);
-        }
-
-        .btnAccion {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 35px;
-            border-radius: 30px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-            margin: 0 10px 15px 10px;
-        }
-
-        .btnAccion:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
-            animation: pulse 1.5s infinite;
-        }
-
-        /* Pantalla de Almacén */
-        #almacen .titulo-almacen {
-            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        #subirBtn {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            color: white;
-            padding: 15px;
-            width: 100%;
-            border: none;
-            border-radius: 15px;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 25px;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(250, 112, 154, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        #subirBtn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(250, 112, 154, 0.4);
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        /* Mensajes */
-        .mensaje {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            text-align: center;
-            animation: fadeIn 0.4s ease forwards;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-
-        .exito { 
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); 
-            color: #155724; 
-        }
-        .vacio { 
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); 
-            color: #856404; 
-        }
-        .aviso { 
-            background: linear-gradient(135deg, #cce5ff 0%, #b8daff 100%); 
-            color: #004085; 
-        }
-
-        /* Galería de fotos */
-        .galeria {
+        .gallery {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .foto {
-            background: white;
-            padding: 12px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            animation: fadeIn 0.5s ease forwards;
-        }
-
-        .foto:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
-
-        .foto img {
-            width: 100%;
-            height: 160px;
-            object-fit: cover;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .foto:hover img {
-            transform: scale(1.03);
-            border-radius: 12px;
-        }
-
-        .foto p {
-            font-size: 14px;
-            color: #666;
-            font-weight: 500;
-        }
-
-        /* Ventana para ver foto grande */
-        #vistaFotoGrande {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 200;
-            padding: 30px 20px;
-            text-align: center;
-            animation: fadeIn 0.3s ease forwards;
-        }
-
-        #vistaFotoGrande img {
-            max-width: 100%;
-            max-height: 80vh;
-            margin-top: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(255,255,255,0.1);
-            transition: all 0.5s ease;
-        }
-
-        #vistaFotoGrande img:hover {
-            transform: scale(1.01);
-        }
-
-        .btn-vista {
-            background: white;
-            color: #333;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 30px;
-            font-size: 16px;
-            font-weight: 600;
-            margin-top: 30px;
-            margin-left: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 3px 10px rgba(255,255,255,0.2);
-        }
-
-        #btnCerrarVista {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-            color: white;
-        }
-
-        #btnDescargarVista {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-        }
-
-        .btn-vista:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(255,255,255,0.3);
-        }
-
-        /* SECCIÓN DE TAREAS */
-        #tareas .titulo-tareas {
-            background: linear-gradient(90deg, #fa709a 0%, #feb47b 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        /* Selector de usuario */
-        .selector-usuario {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .btnUsuario {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 15px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btnUsuario.activo-usuario {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-        }
-
-        #usuario1Btn {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-        }
-
-        #usuario2Btn {
-            background: linear-gradient(135deg, #fa709a 0%, #feb47b 100%);
-            color: white;
-        }
-
-        /* Formulario de tareas */
-        .formulario-tarea {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 30px;
-            animation: slideIn 0.5s ease forwards;
-        }
-
-        .fila-tarea {
-            display: flex;
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
+        }
+
+        .gallery img {
+            width: 100%;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+        }
+
+        .task-item {
+            display: flex;
             align-items: center;
-        }
-
-        #inputTarea {
-            flex: 1;
-            padding: 15px 20px;
-            border: none;
-            border-radius: 15px;
-            font-size: 16px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        #inputTarea:focus {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-        }
-
-        #selectorTareaUsuario {
-            padding: 15px 15px;
-            border: none;
-            border-radius: 15px;
-            font-size: 16px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            background: white;
-        }
-
-        #agregarTareaBtn {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-            border: none;
-            padding: 15px 20px;
-            border-radius: 15px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        #agregarTareaBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(46, 229, 157, 0.4);
-        }
-
-        /* Lista de tareas */
-        .lista-tareas {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .tarea {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 15px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            animation: fadeIn 0.4s ease forwards;
-            transition: all 0.3s ease;
-        }
-
-        .tarea:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.12);
-        }
-
-        .tarea.completada {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            opacity: 0.8;
-        }
-
-        .tarea.completada .texto-tarea {
-            text-decoration: line-through;
-            color: #6c757d;
-        }
-
-        .encabezado-tarea {
-            display: flex;
             justify-content: space-between;
-            align-items: center;
-        }
-
-        .texto-tarea {
-            font-size: 16px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .asignado-a {
-            font-size: 14px;
-            font-weight: 500;
-            padding: 5px 10px;
-            border-radius: 10px;
-            color: white;
-        }
-
-        .asignado-usuario1 {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        .asignado-usuario2 {
-            background: linear-gradient(135deg, #fa709a 0%, #feb47b 100%);
-        }
-
-        .acciones-tarea {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .btn-tarea {
-            border: none;
-            padding: 8px 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btnCompletar {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-        }
-
-        .btnEliminar {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-            color: white;
-        }
-
-        .btn-tarea:hover {
-            transform: scale(1.1);
-        }
-
-        /* Efecto scroll suave */
-        html {
-            scroll-behavior: smooth;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <!-- Menú de navegación -->
-    <nav>
-        <button class="btnMenu activo" onclick="cambiarPantalla('inicio')">🏠 Inicio</button>
-        <button class="btnMenu" onclick="cambiarPantalla('almacen')">🗂️ Fotos</button>
-        <button class="btnMenu" onclick="cambiarPantalla('tareas')">📋 Tareas</button>
-    </nav>
 
-    <!-- Pantalla de Inicio -->
-    <div class="pantalla activa" id="inicio">
-        <h1 class="titulo-principal">📸 Mis Fotos & Tareas App</h1>
-        <img src="https://picsum.photos/600/400?random=1" alt="Portada de fotos y tareas" class="imagen-portada">
-        <p class="texto-bienvenida">Guarda tus fotos y organiza tus tareas - asigna responsabilidades y mantente en orden!</p>
-
-        <!-- Tareas rápidas desde inicio -->
-        <div class="tareas-rapidas">
-            <h3>➕ Agregar Tarea Rápida</h3>
-            <div class="formulario-rapido">
-                <div class="fila-formulario">
-                    <input type="text" id="inputTareaRapida" placeholder="Escribe una tarea...">
-                    <select class="selector-asignar" id="selectorAsignarRapido">
-                        <option value="usuario1">👤 Usuario 1</option>
-                        <option value="usuario2">👤 Usuario 2</option>
-                    </select>
-                </div>
-                <button id="btnAgregarRapido" onclick="agregarTareaRapida()">📌 Asignar Tarea</button>
-            </div>
-        </div>
-
-        <button class="btnAccion" onclick="cambiarPantalla('almacen')">🗂️ Ir a Almacén de Fotos</button>
-        <button class="btnAccion" onclick="cambiarPantalla('tareas')">📋 Ir a Gestión de Tareas</button>
+<div class="container">
+    <div class="card">
+        <h2>📷 Reporte Fotográfico</h2>
+        <input type="file" id="photoInput" accept="image/*" capture="environment">
+        <button onclick="savePhoto()">Subir / Tomar Foto</button>
     </div>
 
-    <!-- Pantalla de Almacén de Fotos -->
-    <div class="pantalla" id="almacen">
-        <h2 class="titulo-almacen">🗂️ Mi Almacén de Fotos</h2>
-        
-        <button id="subirBtn" onclick="document.getElementById('selectorFotos').click()">📤 Subir Nueva Foto</button>
-        <input type="file" id="selectorFotos" accept="image/*">
-
-        <div id="mensajeFotos" class="mensaje"></div>
-
-        <div class="galeria" id="galeria"></div>
+    <div class="card">
+        <h2>🖼️ Galería de Reportes</h2>
+        <div id="gallery" class="gallery"></div>
     </div>
 
-    <!-- Pantalla de Tareas -->
-    <div class="pantalla" id="tareas">
-        <h2 class="titulo-tareas">📋 Gestión de Tareas</h2>
-        
-        <!-- Selector de usuario para ver tareas -->
-        <div class="selector-usuario">
-            <button class="btnUsuario activo-usuario" id="usuario1Btn" onclick="cambiarUsuario('usuario1')">👤 Ver Tareas de Usuario 1</button>
-            <button class="btnUsuario" id="usuario2Btn" onclick="cambiarUsuario('usuario2')">👤 Ver Tareas de Usuario 2</button>
-        </div>
-
-        <!-- Formulario para agregar tareas con asignación -->
-        <div class="formulario-tarea">
-            <div class="fila-tarea">
-                <input type="text" id="inputTarea" placeholder="Escribe una nueva tarea...">
-                <select id="selectorTareaUsuario">
-                    <option value="usuario1">👤 Asignar a Usuario 1</option>
-                    <option value="usuario2">👤 Asignar a Usuario 2</option>
-                </select>
-            </div>
-            <button id="agregarTareaBtn" onclick="agregarTarea()">➕ Agregar & Asignar Tarea</button>
-        </div>
-
-        <div id="mensajeTareas" class="mensaje"></div>
-
-        <!-- Lista de tareas -->
-        <div class="lista-tareas" id="listaTareas"></div>
+    <div class="card">
+        <h2>📝 Asignar Tarea</h2>
+        <input type="text" id="taskText" placeholder="Descripción de la tarea...">
+        <select id="userSelect">
+            <option value="Usuario 1">Usuario 1</option>
+            <option value="Usuario 2">Usuario 2</option>
+            <option value="Usuario 3">Usuario 3</option>
+        </select>
+        <button onclick="addTask()">Asignar a Usuario</button>
     </div>
 
-    <!-- Ventana para ver foto grande -->
-    <div id="vistaFotoGrande">
-        <img id="fotoGrande" src="" alt="Foto en tamaño grande">
-        <br>
-        <button class="btn-vista" id="btnCerrarVista" onclick="cerrarVistaFoto()">❌ Cerrar</button>
-        <button class="btn-vista" id="btnDescargarVista" onclick="descargarFotoActual()">📥 Descargar</button>
+    <div class="card">
+        <h2>✅ Estado de Tareas</h2>
+        <div id="taskList"></div>
     </div>
+</div>
 
-    <script>
-        // Elementos del DOM
-        const selectorFotos = document.getElementById('selectorFotos');
-        const subirBtn = document.getElementById('subirBtn');
-        const galeria = document.getElementById('galeria');
-        const mensajeFotos = document.getElementById('mensajeFotos');
-        const vistaFotoGrande = document.getElementById('vistaFotoGrande');
-        const fotoGrande = document.getElementById('fotoGrande');
-        const inputTarea = document.getElementById('inputTarea');
-        const agregarTareaBtn = document.getElementById('agregarTareaBtn');
-        const listaTareas = document.getElementById('listaTareas');
-        const mensajeTareas = document.getElementById('mensajeTareas');
-        const inputTareaRapida = document.getElementById('inputTareaRapida');
-        const selectorAsignarRapido = document.getElementById('selectorAsignarRapido');
-        const selectorTareaUsuario = document.getElementById('selectorTareaUsuario');
-        
-        let fotoActual = null;
-        let indiceFotoActual = 0;
-        let usuarioActual = 'usuario1'; // Usuario por defecto para ver tareas
+<script>
+    // --- LÓGICA DE FOTOS ---
+    function savePhoto() {
+        const input = document.getElementById('photoInput');
+        const gallery = document.getElementById('gallery');
 
-        // FUNCIÓN PRINCIPAL PARA CAMBIAR DE PANTALLA (CORREGIDA)
-        function cambiarPantalla(nombrePantalla) {
-            // Ocultar todas las pantallas con transición
-            document.querySelectorAll('.pantalla').forEach(pantalla => {
-                pantalla.style.opacity = '0';
-                pantalla.style.pointerEvents = 'none'; // Evitar clicks mientras cambia
-                setTimeout(() => {
-                    pantalla.classList.remove('activa');
-                }, 200);
-            });
-            // Quitar clase activa de todos los botones del menú
-            document.querySelectorAll('.btnMenu').forEach(btn => {
-                btn.classList.remove('activo');
-            });
-            // Mostrar la pantalla seleccionada
-            setTimeout(() => {
-                const pantallaDestino = document.getElementById(nombrePantalla);
-                pantallaDestino.classList.add('activa');
-                pantallaDestino.style.opacity = '1';
-                pantallaDestino.style.pointerEvents = 'auto';
-                // Marcar botón correspondiente como activo
-                document.querySelector(`.btnMenu[onclick="cambiarPantalla('${nombrePantalla}')"]`).classList.add('activo');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                gallery.appendChild(img);
                 
-                // Cargar contenido de la pantalla
-                if (nombrePantalla === 'almacen') mostrarFotos();
-                if (nombrePantalla === 'tareas') mostrarTareas();
-            }, 250);
+                // Limpiar input
+                input.value = "";
+            };
+            reader.readAsDataURL(input.files[0]);
         }
+    }
 
-        // CAMBIAR ENTRE USUARIOS PARA VER TAREAS
-        function cambiarUsuario(usuario) {
-            usuarioActual = usuario;
-            document.querySelectorAll('.btnUsuario').forEach(btn => {
-                btn.classList.remove('activo-usuario');
-            });
-            document.getElementById(`${usuario}Btn`).classList.add('activo-usuario');
-            mostrarTareas();
-            mostrarMensajeTareas(`✅ Mostrando tareas de ${usuario === 'usuario1' ? 'Usuario 1' : 'Usuario 2'}`, 'aviso');
+    // --- LÓGICA DE TAREAS ---
+    function addTask() {
+        const text = document.getElementById('taskText').value;
+        const user = document.getElementById('userSelect').value;
+        const list = document.getElementById('taskList');
+
+        if (text === "") return;
+
+        const div = document.createElement('div');
+        div.className = 'task-item';
+        div.innerHTML = `
+            <span><strong>${user}:</strong> ${text}</span>
+            <input type="radio" onclick="completeTask(this)">
+        `;
+        
+        list.appendChild(div);
+        document.getElementById('taskText').value = "";
+    }
+
+    function completeTask(radio) {
+        if(radio.checked) {
+            const span = radio.parentElement.querySelector('span');
+            span.style.textDecoration = "line-through";
+            span.style.opacity = "0.5";
+            radio.disabled = true;
         }
+    }
+</script>
 
-        // GESTIÓN DE FOTOS
-        selectorFotos.addEventListener('change', (e) => {
-            const archivo = e.target.files[0];
-            if (archivo) {
-                const lector = new FileReader();
-                lector.onload = function(evento) {
-                    const datosFoto = {
-                        id: Date.now(),
-                        nombre: archivo.name,
-                        datos: evento.target.result
-                    };
-
-                    let fotosGuardadas = JSON.parse(localStorage.getItem('misFotos')) || [];
-                    fotosGuardadas.push(datosFoto);
-                    localStorage.setItem('misFotos', JSON.stringify(fotosGuardadas));
-
-                    mostrarMensajeFotos('✅ Foto guardada correctamente!', 'exito');
-                    mostrarFotos();
-                    selectorFotos.value = '';
-                };
-                lector.readAsDataURL(archivo);
-            }
-        });
-
-        function mostrarFotos() {
-            let fotosGuardadas = JSON.parse(localStorage.getItem('misFotos')) || [];
-            galeria.innerHTML = '';
-
-            if (fotosGuardadas.length === 0) {
-                mostrarMensajeFotos('⚠️ No tienes fotos guardadas aún - ¡sube la primera!', 'vacio');
-                return;
-            }
-
-            mensajeFotos.innerHTML = '';
-
-            fotosGuardadas.forEach((foto, indice) => {
-                const divFoto = document.createElement('div');
-                divFoto.className = 'foto';
-                divFoto.style.animationDelay = `${indice * 0.1}s`;
-                divFoto.innerHTML = `
-                    <img src="${foto.datos}" alt="${foto.nombre}">
-                    <p>${foto.nombre}</p>
-                `;
-                divFoto.addEventListener('click', () => verFotoGrande(foto, indice));
-                galeria.appendChild(divFoto);
-            });
-        }
-
-        function verFotoGrande(foto, indice) {
-            foto
+</body>
+</html>
