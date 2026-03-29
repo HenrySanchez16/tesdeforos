@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Fotos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            padding: 15px;
+        }
+
+        header {
+            background: #2196F3;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Botón de subir foto */
+        #subirBtn {
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        #subirBtn:hover {
+            background: #45a049;
+        }
+
+        input[type="file"] {
+            display: none; /* Ocultamos el input original */
+        }
+
+        /* Mensajes */
+        .mensaje {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .exito { background: #dff0d8; color: #3c763d; }
+        .vacio { background: #fcf8e3; color: #8a6d3b; }
+
+        /* Galería de fotos */
+        .galeria {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .foto {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .foto img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .foto button {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .foto .btnDescargar {
+            background: #2196F3;
+        }
+
+        /* Para pantallas un poco más grandes */
+        @media (min-width: 500px) {
+            .galeria {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📸 Mis Fotos Guardadas</h1>
+        <p>Toca para subir y ver tus imágenes</p>
+    </header>
+
+    <!-- Botón para seleccionar fotos -->
+    <button id="subirBtn">📤 Seleccionar Foto</button>
+    <input type="file" id="selectorFotos" accept="image/*">
+
+    <!-- Área de mensajes -->
+    <div id="mensaje"></div>
+
+    <!-- Galería donde se muestran las fotos -->
+    <div class="galeria" id="galeria"></div>
+
+    <script>
+        // Elementos del DOM
+        const selectorFotos = document.getElementById('selectorFotos');
+        const subirBtn = document.getElementById('subirBtn');
+        const galeria = document.getElementById('galeria');
+        const mensaje = document.getElementById('mensaje');
+
+        // Cuando tocamos el botón, abrimos el selector de archivos
+        subirBtn.addEventListener('click', () => {
+            selectorFotos.click();
+        });
+
+        // Cuando seleccionamos una foto
+        selectorFotos.addEventListener('change', (e) => {
+            const archivo = e.target.files[0];
+            if (archivo) {
+                // Convertimos la foto a texto para guardarla
+                const lector = new FileReader();
+                lector.onload = function(evento) {
+                    // Datos de la foto
+                    const datosFoto = {
+                        id: Date.now(), // ID único con la hora actual
+                        nombre: archivo.name,
+                        tipo: archivo.type,
+                        datos: evento.target.result // Foto en formato texto
+                    };
+
+                    // Guardamos en el almacenamiento del navegador
+                    let fotosGuardadas = JSON.parse(localStorage.getItem('misFotos')) || [];
+                    fotosGuardadas.push(datosFoto);
+                    localStorage.setItem('misFotos', JSON.stringify(fotosGuardadas));
+
+                    // Mostramos mensaje de éxito
+                    mostrarMensaje('✅ Foto guardada correctamente!', 'exito');
+
+                    // Actualizamos la galería
+                    mostrarFotos();
+
+                    // Reseteamos el selector para poder subir la misma foto varias veces
+                    selectorFotos.value = '';
+                };
+                lector.readAsDataURL(archivo);
+            }
+        });
+
+        // Mostrar todas las fotos guardadas
+        function mostrarFotos() {
+            let fotosGuardadas = JSON.parse(localStorage.getItem('misFotos')) || [];
+            galeria.innerHTML = '';
+
+            if (fotosGuardadas.length === 0) {
+                mostrarMensaje('⚠️ Todavía no tienes fotos guardadas', 'vacio');
+                return;
+            }
+
+            // Ocultamos el mensaje si hay fotos
+            mensaje.innerHTML = '';
+
+            // Creamos cada elemento de la galería
+            fotosGuardadas.forEach(foto => {
+                const divFoto = document.createElement('div');
+                divFoto.className = 'foto';
+                divFoto.innerHTML = `
+                    <img src="${foto.datos}" alt="${foto.nombre}">
+                    <p>${foto.nombre}</p>
+                    <button class="btnDescargar" onclick="descargarFoto(${foto.id})">📥 Descargar</button>
+                    <button onclick="borrarFoto(${foto.id})">🗑️ Borrar</button>
+                `;
+                galeria.appendChild(divFoto);
+            });
+        }
+
+        // Descargar una foto
+        function descargarFoto(id) {
+            const fotosGuardadas = JSON.parse(localStorage.getItem('misFotos')) || [];
+            const foto = fotosGuardadas.find(f => f.id === id);
+            
+            if (foto) {
+                const enlace = document.createElement('a');
+                enlace.href = foto.datos;
+                enlace.download = foto.nombre;
+                enlace.click();
+            }
+        }
+
+        // Borrar una foto
+        function borrarFoto(id) {
+            if (confirm('¿Seguro que quieres borrar esta foto?')) {
+                let fotosGuardadas = JSON.parse(localStorage.getItem('misFotos')) || [];
+                fotosGuardadas = fotosGuardadas.filter(f => f.id !== id);
+                localStorage.setItem('misFotos', JSON.stringify(fotosGuardadas));
+                mostrarFotos();
+            }
+        }
+
+        // Mostrar mensajes
+        function mostrarMensaje(texto, tipo) {
+            mensaje.innerHTML = `<div class="mensaje ${tipo}">${texto}</div>`;
+            // Ocultar mensaje después de 3 segundos
+            setTimeout(() => {
+                mensaje.innerHTML = '';
+            }, 3000);
+        }
+
+        // Cargar fotos cuando abre la web
+        window.onload = mostrarFotos;
+    </script>
+</body>
+</html>
