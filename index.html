@@ -3,155 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Reportes y Tareas</title>
+    <title>DISECO - Gestión de Campo</title>
     <style>
         :root {
             --primary: #00f2fe;
             --secondary: #4facfe;
-            --bg: #0f172a;
-            --glass: rgba(255, 255, 255, 0.1);
+            --success: #00ff88;
+            --bg: #0b0f1a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --card-bg: rgba(30, 41, 59, 0.7);
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             background: var(--bg);
-            color: white;
+            color: #fff;
             margin: 0;
-            padding: 20px;
+            padding-bottom: 90px;
         }
 
-        .container { max-width: 600px; margin: auto; }
-
-        /* Estilo Glassmorphism */
-        .card {
-            background: var(--glass);
+        /* --- NAVEGACIÓN --- */
+        .navbar {
+            position: fixed;
+            bottom: 0; width: 100%;
+            background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            border-top: 1px solid var(--primary);
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1; padding: 15px; text-align: center;
+            cursor: pointer; font-size: 0.75rem; color: #64748b;
+            transition: 0.3s;
+        }
+
+        .nav-item.active { color: var(--primary); font-weight: bold; }
+
+        /* --- VISTAS --- */
+        .view { display: none; padding: 20px; animation: slideUp 0.3s ease; }
+        .view.active { display: block; }
+        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
             border-radius: 15px;
             padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             margin-bottom: 20px;
         }
 
-        h2 { border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        h2 { color: var(--primary); font-size: 1.5rem; margin-bottom: 20px; }
 
         input, select, button {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border: none;
-            outline: none;
+            width: 100%; padding: 14px; margin: 8px 0;
+            border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2); color: white; box-sizing: border-box;
         }
 
         button {
-            background: linear-gradient(45deg, var(--secondary), var(--primary));
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            color: #000; font-weight: bold; border: none; cursor: pointer;
         }
 
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+        /* --- FILTRO DE USUARIOS --- */
+        .user-filter {
+            display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px;
         }
 
-        .gallery img {
-            width: 100%;
-            border-radius: 8px;
-            border: 2px solid var(--primary);
+        .filter-btn {
+            background: var(--glass); padding: 8px 20px; border-radius: 20px;
+            border: 1px solid var(--primary); cursor: pointer; white-space: nowrap;
         }
 
-        .task-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(0,0,0,0.3);
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 5px;
+        .filter-btn.active { background: var(--primary); color: #000; }
+
+        /* --- DISEÑO DE TAREAS --- */
+        .task-card {
+            background: var(--glass);
+            padding: 18px; border-radius: 12px; margin-bottom: 12px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-left: 4px solid var(--secondary);
+            transition: 0.3s;
         }
+
+        .task-info { flex-grow: 1; margin-right: 20px; }
+        .task-info b { display: block; color: var(--primary); font-size: 0.8rem; text-transform: uppercase; }
+        .task-info p { margin: 5px 0 0; font-size: 1rem; }
+
+        .radio-container {
+            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+        }
+
+        input[type="radio"] {
+            width: 24px; height: 24px; cursor: pointer; accent-color: var(--success);
+        }
+
+        .completed {
+            border-left: 4px solid var(--success) !important;
+            opacity: 0.6;
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .completed p { text-decoration: line-through; }
+
+        /* --- GALERÍA --- */
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .gallery-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; }
+
+        /* --- MODAL --- */
+        #modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center;
+        }
+        #modal img { max-width: 95%; max-height: 80%; border-radius: 10px; border: 2px solid var(--primary); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="card">
-        <h2>📷 Reporte Fotográfico</h2>
-        <input type="file" id="photoInput" accept="image/*" capture="environment">
-        <button onclick="savePhoto()">Subir / Tomar Foto</button>
+    <div id="upload" class="view active">
+        <h2>📷 Nuevo Reporte</h2>
+        <div class="card">
+            <input type="file" id="fileInput" accept="image/*" capture="environment">
+            <button onclick="uploadImage()">REGISTRAR FOTO</button>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>🖼️ Galería de Reportes</h2>
-        <div id="gallery" class="gallery"></div>
+    <div id="gallery" class="view">
+        <h2>🖼️ Galería</h2>
+        <div class="gallery-grid" id="photoContainer"></div>
     </div>
 
-    <div class="card">
-        <h2>📝 Asignar Tarea</h2>
-        <input type="text" id="taskText" placeholder="Descripción de la tarea...">
-        <select id="userSelect">
-            <option value="Usuario 1">Usuario 1</option>
-            <option value="Usuario 2">Usuario 2</option>
-            <option value="Usuario 3">Usuario 3</option>
-        </select>
-        <button onclick="addTask()">Asignar a Usuario</button>
+    <div id="assign" class="view">
+        <h2>🛠️ Asignar Tarea</h2>
+        <div class="card">
+            <input type="text" id="taskName" placeholder="Descripción de la tarea...">
+            <select id="userTask">
+                <option value="Carlos">Carlos</option>
+                <option value="Ammy">Ammy</option>
+                <option value="Usuario 3">Usuario 3</option>
+            </select>
+            <button onclick="createTask()">ENVIAR TAREA</button>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>✅ Estado de Tareas</h2>
-        <div id="taskList"></div>
+    <div id="tasks" class="view">
+        <h2>📋 Mis Tareas</h2>
+        <div class="user-filter">
+            <div class="filter-btn active" onclick="filterTasks('Carlos', this)">Carlos</div>
+            <div class="filter-btn" onclick="filterTasks('Ammy', this)">Ammy</div>
+            <div class="filter-btn" onclick="filterTasks('Usuario 3', this)">Usuario 3</div>
+        </div>
+        <div id="taskList">
+            </div>
     </div>
-</div>
+
+    <div id="modal" onclick="this.style.display='none'"><img id="modalImg" src=""></div>
+
+    <nav class="navbar">
+        <div class="nav-item active" onclick="showView('upload', this)">SUBIR</div>
+        <div class="nav-item" onclick="showView('gallery', this)">FOTOS</div>
+        <div class="nav-item" onclick="showView('assign', this)">ASIGNAR</div>
+        <div class="nav-item" onclick="showView('tasks', this)">TAREAS</div>
+    </nav>
 
 <script>
-    // --- LÓGICA DE FOTOS ---
-    function savePhoto() {
-        const input = document.getElementById('photoInput');
-        const gallery = document.getElementById('gallery');
+    let allTasks = []; // Array para guardar tareas y filtrarlas
+    let currentUser = "Carlos";
 
+    function showView(viewId, element) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        element.classList.add('active');
+        if(viewId === 'tasks') renderTasks();
+    }
+
+    function uploadImage() {
+        const input = document.getElementById('fileInput');
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 const img = document.createElement('img');
                 img.src = e.target.result;
-                gallery.appendChild(img);
-                
-                // Limpiar input
+                img.onclick = () => {
+                    document.getElementById('modalImg').src = img.src;
+                    document.getElementById('modal').style.display = 'flex';
+                };
+                document.getElementById('photoContainer').appendChild(img);
+                alert("Foto reportada correctamente");
                 input.value = "";
             };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    // --- LÓGICA DE TAREAS ---
-    function addTask() {
-        const text = document.getElementById('taskText').value;
-        const user = document.getElementById('userSelect').value;
-        const list = document.getElementById('taskList');
+    function createTask() {
+        const desc = document.getElementById('taskName').value;
+        const user = document.getElementById('userTask').value;
+        if (!desc) return;
 
-        if (text === "") return;
-
-        const div = document.createElement('div');
-        div.className = 'task-item';
-        div.innerHTML = `
-            <span><strong>${user}:</strong> ${text}</span>
-            <input type="radio" onclick="completeTask(this)">
-        `;
-        
-        list.appendChild(div);
-        document.getElementById('taskText').value = "";
+        allTasks.push({ id: Date.now(), user: user, desc: desc, done: false });
+        document.getElementById('taskName').value = "";
+        alert("Tarea asignada a " + user);
     }
 
-    function completeTask(radio) {
-        if(radio.checked) {
-            const span = radio.parentElement.querySelector('span');
-            span.style.textDecoration = "line-through";
-            span.style.opacity = "0.5";
-            radio.disabled = true;
+    function filterTasks(user, btn) {
+        currentUser = user;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderTasks();
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('taskList');
+        container.innerHTML = "";
+        
+        const filtered = allTasks.filter(t => t.user === currentUser);
+        
+        if(filtered.length === 0) {
+            container.innerHTML = `<p style="text-align:center; opacity:0.5;">No hay tareas para ${currentUser}</p>`;
+            return;
+        }
+
+        filtered.forEach(task => {
+            const div = document.createElement('div');
+            div.className = `task-card ${task.done ? 'completed' : ''}`;
+            div.innerHTML = `
+                <div class="task-info">
+                    <b>Asignado a ${task.user}</b>
+                    <p>${task.desc}</p>
+                </div>
+                <div class="radio-container">
+                    <input type="radio" ${task.done ? 'checked disabled' : ''} onclick="markDone(${task.id})">
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function markDone(id) {
+        const task = allTasks.find(t => t.id === id);
+        if(task) {
+            task.done = true;
+            renderTasks();
         }
     }
 </script>
-
 </body>
 </html>
