@@ -3,131 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DISECO - Gestión de Campo</title>
+    <title>DISECO - Panel Seguro</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary: #00f2fe;
             --secondary: #4facfe;
-            --success: #00ff88;
             --bg: #0b0f1a;
+            --card-bg: rgba(30, 41, 59, 0.8);
             --glass: rgba(255, 255, 255, 0.05);
-            --card-bg: rgba(30, 41, 59, 0.7);
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background: var(--bg);
             color: #fff;
             margin: 0;
             padding-bottom: 90px;
         }
 
-        /* --- NAVEGACIÓN --- */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; background: rgba(15, 23, 42, 0.9);
+            position: sticky; top: 0; z-index: 500; border-bottom: 1px solid var(--glass);
+        }
+
         .navbar {
-            position: fixed;
-            bottom: 0; width: 100%;
+            position: fixed; bottom: 0; width: 100%;
             background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            display: flex;
-            border-top: 1px solid var(--primary);
-            z-index: 100;
+            display: flex; border-top: 1px solid var(--primary); z-index: 1000;
         }
-
-        .nav-item {
-            flex: 1; padding: 15px; text-align: center;
-            cursor: pointer; font-size: 0.75rem; color: #64748b;
-            transition: 0.3s;
-        }
-
+        .nav-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-size: 0.75rem; color: #64748b; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
 
-        /* --- VISTAS --- */
-        .view { display: none; padding: 20px; animation: slideUp 0.3s ease; }
+        .view { display: none; padding: 20px; animation: fadeIn 0.3s; }
         .view.active { display: block; }
-        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 20px;
+            background: var(--card-bg); border-radius: 15px; padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
         }
 
-        h2 { color: var(--primary); font-size: 1.5rem; margin-bottom: 20px; }
-
-        input, select, button {
+        input, textarea, select, button {
             width: 100%; padding: 14px; margin: 8px 0;
-            border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.2); color: white; box-sizing: border-box;
+            border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white;
+            font-size: 1rem;
         }
 
-        button {
-            background: linear-gradient(90deg, var(--secondary), var(--primary));
-            color: #000; font-weight: bold; border: none; cursor: pointer;
+        /* Estilo específico para que los puntos de la contraseña se vean bien */
+        input[type="password"] {
+            letter-spacing: 5px;
+            text-align: center;
         }
 
-        /* --- FILTRO DE USUARIOS --- */
-        .user-filter {
-            display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px;
-        }
+        button { background: linear-gradient(90deg, var(--secondary), var(--primary)); color: #000; font-weight: bold; cursor: pointer; border: none; }
 
-        .filter-btn {
-            background: var(--glass); padding: 8px 20px; border-radius: 20px;
-            border: 1px solid var(--primary); cursor: pointer; white-space: nowrap;
-        }
-
-        .filter-btn.active { background: var(--primary); color: #000; }
-
-        /* --- DISEÑO DE TAREAS --- */
         .task-card {
-            background: var(--glass);
-            padding: 18px; border-radius: 12px; margin-bottom: 12px;
-            display: flex; align-items: center; justify-content: space-between;
-            border-left: 4px solid var(--secondary);
-            transition: 0.3s;
+            background: var(--glass); padding: 15px; border-radius: 12px; margin-bottom: 10px;
+            display: flex; align-items: center; border-left: 4px solid var(--primary);
         }
+        .task-card.done { opacity: 0.4; text-decoration: line-through; border-left-color: #00ff88; }
 
-        .task-info { flex-grow: 1; margin-right: 20px; }
-        .task-info b { display: block; color: var(--primary); font-size: 0.8rem; text-transform: uppercase; }
-        .task-info p { margin: 5px 0 0; font-size: 1rem; }
-
-        .radio-container {
-            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
-        }
-
-        input[type="radio"] {
-            width: 24px; height: 24px; cursor: pointer; accent-color: var(--success);
-        }
-
-        .completed {
-            border-left: 4px solid var(--success) !important;
-            opacity: 0.6;
-            background: rgba(0, 255, 136, 0.05);
-        }
-
-        .completed p { text-decoration: line-through; }
-
-        /* --- GALERÍA --- */
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .gallery-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; }
-
-        /* --- MODAL --- */
-        #modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center;
-        }
-        #modal img { max-width: 95%; max-height: 80%; border-radius: 10px; border: 2px solid var(--primary); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .photo-card { background: var(--glass); border-radius: 10px; overflow: hidden; border: 1px solid var(--primary); }
+        .photo-card img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+        .photo-card p { padding: 8px; margin: 0; font-size: 0.75rem; text-align: center; }
     </style>
 </head>
-<body>
+<body onload="initApp()">
+
+    <div class="header">
+        <span id="userIndicator" style="color: var(--primary); font-size: 0.8rem;">Invitado</span>
+        <div style="font-size: 1.5rem; cursor: pointer;" onclick="openSettings()">⋮</div>
+    </div>
 
     <div id="upload" class="view active">
         <h2>📷 Nuevo Reporte</h2>
         <div class="card">
             <input type="file" id="fileInput" accept="image/*" capture="environment">
-            <button onclick="uploadImage()">REGISTRAR FOTO</button>
+            <textarea id="photoDesc" placeholder="Descripción del reporte..." rows="2"></textarea>
+            <button onclick="uploadImage()">REGISTRAR</button>
         </div>
     </div>
 
@@ -137,30 +92,40 @@
     </div>
 
     <div id="assign" class="view">
-        <h2>🛠️ Asignar Tarea</h2>
-        <div class="card">
-            <input type="text" id="taskName" placeholder="Descripción de la tarea...">
-            <select id="userTask">
-                <option value="Carlos">Carlos</option>
-                <option value="Ammy">Ammy</option>
-                <option value="Usuario 3">Usuario 3</option>
-            </select>
-            <button onclick="createTask()">ENVIAR TAREA</button>
+        <div id="assign-lock" class="card" style="text-align: center;">
+            <h2>🛠️ Admin Panel</h2>
+            <p style="font-size: 0.8rem; opacity: 0.6;">Ingrese código de acceso</p>
+            <input type="password" id="accessKey" placeholder="••••" autocomplete="off">
+            <button onclick="checkAssignKey()">ENTRAR</button>
+        </div>
+        <div id="assign-form" style="display: none;">
+            <div class="card">
+                <input type="text" id="taskName" placeholder="Descripción de la tarea...">
+                <select id="userTask">
+                    <option value="Carlos">Carlos</option>
+                    <option value="Ammy">Ammy</option>
+                    <option value="Usuario 3">Usuario 3</option>
+                </select>
+                <button onclick="createTask()">ASIGNAR</button>
+                <button onclick="lockAssign()" style="background:none; color:gray; border:1px solid gray; margin-top:10px;">SALIR</button>
+            </div>
         </div>
     </div>
 
     <div id="tasks" class="view">
-        <h2>📋 Mis Tareas</h2>
-        <div class="user-filter">
-            <div class="filter-btn active" onclick="filterTasks('Carlos', this)">Carlos</div>
-            <div class="filter-btn" onclick="filterTasks('Ammy', this)">Ammy</div>
-            <div class="filter-btn" onclick="filterTasks('Usuario 3', this)">Usuario 3</div>
-        </div>
-        <div id="taskList">
+        <div id="user-selection-zone">
+            <div class="card" style="text-align:center;">
+                <h2>📋 Mis Tareas</h2>
+                <button onclick="accessTasks('Carlos')">SOY CARLOS</button>
+                <button onclick="accessTasks('Ammy')" style="margin-top:10px;">SOY AMMY</button>
             </div>
+        </div>
+        <div id="private-task-zone" style="display: none;">
+            <h2 id="taskOwnerTitle">Tareas</h2>
+            <div id="taskList"></div>
+            <button onclick="exitTasks()" style="background:none; border:1px solid var(--primary); color:var(--primary); margin-top:20px;">CAMBIAR PERFIL</button>
+        </div>
     </div>
-
-    <div id="modal" onclick="this.style.display='none'"><img id="modalImg" src=""></div>
 
     <nav class="navbar">
         <div class="nav-item active" onclick="showView('upload', this)">SUBIR</div>
@@ -170,86 +135,144 @@
     </nav>
 
 <script>
-    let allTasks = []; // Array para guardar tareas y filtrarlas
-    let currentUser = "Carlos";
+    // CARGAR DATOS DE LOCAL STORAGE
+    let allTasks = JSON.parse(localStorage.getItem('diseco_tasks')) || [];
+    let allPhotos = JSON.parse(localStorage.getItem('diseco_photos')) || [];
+    let loggedUser = localStorage.getItem('diseco_user') || null;
+
+    function initApp() {
+        renderGallery();
+        if(loggedUser) accessTasks(loggedUser);
+    }
+
+    function saveData() {
+        localStorage.setItem('diseco_tasks', JSON.stringify(allTasks));
+        localStorage.setItem('diseco_photos', JSON.stringify(allPhotos));
+        localStorage.setItem('diseco_user', loggedUser || "");
+    }
 
     function showView(viewId, element) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
         element.classList.add('active');
-        if(viewId === 'tasks') renderTasks();
+        if(viewId === 'tasks' && loggedUser) renderTasks();
     }
 
-    function uploadImage() {
-        const input = document.getElementById('fileInput');
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.onclick = () => {
-                    document.getElementById('modalImg').src = img.src;
-                    document.getElementById('modal').style.display = 'flex';
-                };
-                document.getElementById('photoContainer').appendChild(img);
-                alert("Foto reportada correctamente");
-                input.value = "";
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
+    // --- ACCESO Y TAREAS ---
+    function accessTasks(user) {
+        loggedUser = user;
+        document.getElementById('user-selection-zone').style.display = 'none';
+        document.getElementById('private-task-zone').style.display = 'block';
+        document.getElementById('taskOwnerTitle').innerText = `Tareas de ${user}`;
+        document.getElementById('userIndicator').innerText = user;
+        saveData();
+        renderTasks();
+    }
+
+    function exitTasks() {
+        loggedUser = null;
+        document.getElementById('user-selection-zone').style.display = 'block';
+        document.getElementById('private-task-zone').style.display = 'none';
+        document.getElementById('userIndicator').innerText = "Invitado";
+        saveData();
     }
 
     function createTask() {
-        const desc = document.getElementById('taskName').value;
+        const name = document.getElementById('taskName').value;
         const user = document.getElementById('userTask').value;
-        if (!desc) return;
-
-        allTasks.push({ id: Date.now(), user: user, desc: desc, done: false });
+        if (!name) return;
+        allTasks.push({ id: Date.now(), user, name, done: false });
         document.getElementById('taskName').value = "";
-        alert("Tarea asignada a " + user);
-    }
-
-    function filterTasks(user, btn) {
-        currentUser = user;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderTasks();
+        saveData();
+        Swal.fire({ icon: 'success', title: 'Tarea Asignada', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
     }
 
     function renderTasks() {
         const container = document.getElementById('taskList');
         container.innerHTML = "";
-        
-        const filtered = allTasks.filter(t => t.user === currentUser);
-        
-        if(filtered.length === 0) {
-            container.innerHTML = `<p style="text-align:center; opacity:0.5;">No hay tareas para ${currentUser}</p>`;
-            return;
-        }
-
-        filtered.forEach(task => {
-            const div = document.createElement('div');
-            div.className = `task-card ${task.done ? 'completed' : ''}`;
-            div.innerHTML = `
-                <div class="task-info">
-                    <b>Asignado a ${task.user}</b>
-                    <p>${task.desc}</p>
-                </div>
-                <div class="radio-container">
-                    <input type="radio" ${task.done ? 'checked disabled' : ''} onclick="markDone(${task.id})">
-                </div>
-            `;
-            container.appendChild(div);
+        const filtered = allTasks.filter(t => t.user === loggedUser);
+        filtered.forEach(t => {
+            container.innerHTML += `
+                <div class="task-card ${t.done ? 'done' : ''}">
+                    <div style="flex:1"><b>${t.name}</b></div>
+                    <input type="radio" ${t.done ? 'checked disabled' : ''} onclick="markDone(${t.id})">
+                </div>`;
         });
     }
 
     function markDone(id) {
-        const task = allTasks.find(t => t.id === id);
-        if(task) {
-            task.done = true;
-            renderTasks();
+        allTasks.find(t => t.id === id).done = true;
+        saveData();
+        renderTasks();
+    }
+
+    // --- FOTOS ---
+    function uploadImage() {
+        const input = document.getElementById('fileInput');
+        const desc = document.getElementById('photoDesc').value;
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                allPhotos.push({ src: e.target.result, text: desc || "Sin descripción" });
+                saveData();
+                renderGallery();
+                input.value = ""; document.getElementById('photoDesc').value = "";
+                Swal.fire({ icon: 'success', title: 'Reporte Guardado', background: '#1e293b', color: '#fff' });
+            };
+            reader.readAsDataURL(input.files[0]);
         }
+    }
+
+    function renderGallery() {
+        const container = document.getElementById('photoContainer');
+        container.innerHTML = "";
+        allPhotos.forEach(p => {
+            container.innerHTML += `<div class="photo-card"><img src="${p.src}" onclick="viewFull('${p.src}')"><p>${p.text}</p></div>`;
+        });
+    }
+
+    function viewFull(src) {
+        Swal.fire({ imageUrl: src, background: 'rgba(0,0,0,0.9)', showConfirmButton: false });
+    }
+
+    // --- SEGURIDAD ---
+    function checkAssignKey() {
+        const keyVal = document.getElementById('accessKey').value;
+        if (keyVal === "AbCd") {
+            document.getElementById('assign-lock').style.display = 'none';
+            document.getElementById('assign-form').style.display = 'block';
+            document.getElementById('accessKey').value = "";
+        } else {
+            Swal.fire({ icon: 'error', title: 'Key Incorrecta', text: 'Acceso denegado' });
+            document.getElementById('accessKey').value = "";
+        }
+    }
+
+    function lockAssign() {
+        document.getElementById('assign-lock').style.display = 'block';
+        document.getElementById('assign-form').style.display = 'none';
+    }
+
+    function openSettings() {
+        Swal.fire({
+            title: 'Configuración', background: '#1e293b', color: '#fff', showConfirmButton: false,
+            html: `
+                <button onclick="clearAll()" style="background:#ff4b2b; color:white; padding:15px; width:100%; border-radius:10px; border:none; cursor:pointer;">🔄 Borrar Todo (Reset)</button>
+                <button onclick="shutdownServer()" style="background:#444; color:white; padding:15px; width:100%; border-radius:10px; border:none; margin-top:10px; cursor:pointer;">⚠️ Apagar Servidor</button>`
+        });
+    }
+
+    function clearAll() {
+        Swal.fire({ title: '¿Borrar datos?', text: "Se eliminarán fotos y tareas permanentemente.", icon: 'warning', showCancelButton: true }).then(r => {
+            if(r.isConfirmed) { localStorage.clear(); location.reload(); }
+        });
+    }
+
+    function shutdownServer() {
+        Swal.fire({ title: 'Cerrando sistema...', timer: 1500, showConfirmButton: false }).then(() => {
+            document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:100px;'>SISTEMA FUERA DE LÍNEA</h1>";
+        });
     }
 </script>
 </body>
