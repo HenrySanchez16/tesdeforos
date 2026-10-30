@@ -1,0 +1,567 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Para Maybelin - Experiencia 3D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@400;700;900&display=swap');
+
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #020008;
+            font-family: 'Montserrat', sans-serif;
+            color: #ffffff;
+        }
+
+        #webgl-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Overlay para el Texto Neon en el Centro del Anillo */
+        .text-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: center;
+            pointer-events: none;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .neon-text {
+            font-family: 'Great Vibes', cursive;
+            font-size: 4rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.1;
+            text-shadow: 
+                0 0 10px #ffffff,
+                0 0 20px #ff69b4,
+                0 0 40px #ff007f,
+                0 0 70px #ff0055,
+                0 0 100px #9900ff;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            letter-spacing: 2px;
+            display: inline-block;
+        }
+
+        @media (min-width: 640px) {
+            .neon-text {
+                font-size: 6.5rem;
+            }
+        }
+
+        .neon-text-special {
+            font-family: 'Great Vibes', cursive;
+            font-size: 5rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.1;
+            text-shadow: 
+                0 0 15px #ffffff,
+                0 0 30px #ff3399,
+                0 0 60px #ff0066,
+                0 0 90px #ff0033,
+                0 0 120px #e60000,
+                0 0 160px #ffd700;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            letter-spacing: 4px;
+            animation: pulseGlow 1.5s infinite alternate;
+        }
+
+        @media (min-width: 640px) {
+            .neon-text-special {
+                font-size: 8.5rem;
+            }
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                transform: scale(0.96);
+                filter: brightness(1);
+            }
+            100% {
+                transform: scale(1.06);
+                filter: brightness(1.3);
+            }
+        }
+
+        .text-out {
+            opacity: 0;
+            transform: scale(0.4) rotate(-5deg);
+        }
+
+        .text-in {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+        }
+
+        /* Indicador táctil inferior */
+        .tap-hint {
+            position: absolute;
+            bottom: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 182, 193, 0.3);
+            padding: 10px 24px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 25px rgba(255, 105, 180, 0.4);
+            pointer-events: none;
+            animation: floatHint 2s infinite ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes floatHint {
+            0%, 100% { transform: translate(-50%, 0); }
+            50% { transform: translate(-50%, -8px); }
+        }
+
+        .footer-credit {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="relative w-full h-full overflow-hidden select-none cursor-pointer">
+
+    <!-- Canvas para Three.js 3D -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Texto Neón centrado en el anillo -->
+    <div class="text-overlay">
+        <div id="textContainer" class="text-in">
+            <h1 id="phraseDisplay" class="neon-text">Te Quiero</h1>
+        </div>
+    </div>
+
+    <!-- Indicador táctil -->
+    <div class="tap-hint" id="tapHint">
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-pink-400 animate-ping"></span>
+        Te quiero mucho may ❤️
+    </div>
+
+    <div class="footer-credit">
+        ♥ Hecho con amor para mí flaquita
+    </div>
+
+    <script>
+        // Secuencia de frases
+        const phrases = ["Te Quiero", "Flaquita", "Hermosa", "Maybelin"];
+        let currentPhraseIndex = 0;
+
+        const textContainer = document.getElementById("textContainer");
+        const phraseDisplay = document.getElementById("phraseDisplay");
+        const tapHint = document.getElementById("tapHint");
+
+        // --- T THREE.JS ESCENA 3D CONFIGURACIÓN ---
+        const canvas = document.getElementById("webgl-canvas");
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020008, 0.035);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 12;
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+        // Resize Listener
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- ILUMINACIÓN NEÓN 3D ---
+        const ambientLight = new THREE.AmbientLight(0xff0088, 0.6);
+        scene.add(ambientLight);
+
+        const pointLight1 = new THREE.PointLight(0xff00ff, 3, 30);
+        pointLight1.position.set(5, 5, 5);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0x00ffff, 3, 30);
+        pointLight2.position.set(-5, -5, 5);
+        scene.add(pointLight2);
+
+        const centerLight = new THREE.PointLight(0xff1493, 5, 25);
+        centerLight.position.set(0, 0, 0);
+        scene.add(centerLight);
+
+        // --- ANILLO Y ANILLO TOROIDAL CENTRAL (RING 3D) ---
+        const ringGroup = new THREE.Group();
+        scene.add(ringGroup);
+
+        // Anillo Principal Toroidal
+        const torusGeo = new THREE.TorusGeometry(3.2, 0.12, 32, 100);
+        const torusMat = new THREE.MeshStandardMaterial({
+            color: 0xff33aa,
+            emissive: 0xff007f,
+            emissiveIntensity: 0.8,
+            roughness: 0.1,
+            metalness: 0.9,
+            wireframe: false
+        });
+        const mainTorus = new THREE.Mesh(torusGeo, torusMat);
+        ringGroup.add(mainTorus);
+
+        // Anillo Secundario TorusKnot Interno con Cristal
+        const knotGeo = new THREE.TorusKnotGeometry(2.8, 0.04, 120, 16, 2, 3);
+        const knotMat = new THREE.MeshPhysicalMaterial({
+            color: 0xffd700,
+            emissive: 0xff8800,
+            emissiveIntensity: 0.6,
+            roughness: 0.1,
+            transmission: 0.6,
+            thickness: 0.5
+        });
+        const innerKnot = new THREE.Mesh(knotGeo, knotMat);
+        ringGroup.add(innerKnot);
+
+        // Halo de partículas en la circunferencia del anillo
+        const ringParticleCount = 150;
+        const ringParticleGeo = new THREE.BufferGeometry();
+        const ringPositions = new Float32Array(ringParticleCount * 3);
+        const ringColors = new Float32Array(ringParticleCount * 3);
+
+        for (let i = 0; i < ringParticleCount; i++) {
+            const angle = (i / ringParticleCount) * Math.PI * 2;
+            const radius = 3.2 + (Math.random() - 0.5) * 0.4;
+            ringPositions[i * 3] = Math.cos(angle) * radius;
+            ringPositions[i * 3 + 1] = Math.sin(angle) * radius;
+            ringPositions[i * 3 + 2] = (Math.random() - 0.5) * 0.5;
+
+            ringColors[i * 3] = 1.0;
+            ringColors[i * 3 + 1] = Math.random() * 0.5 + 0.5;
+            ringColors[i * 3 + 2] = 1.0;
+        }
+
+        ringParticleGeo.setAttribute('position', new THREE.BufferAttribute(ringPositions, 3));
+        ringParticleGeo.setAttribute('color', new THREE.BufferAttribute(ringColors, 3));
+
+        const ringParticleMat = new THREE.PointsMaterial({
+            size: 0.1,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending
+        });
+
+        const ringParticles = new THREE.Points(ringParticleGeo, ringParticleMat);
+        ringGroup.add(ringParticles);
+
+        // --- CORAZONES 3D EN ÓRBITA ALREDEDOR DEL CÍRCULO ---
+        const orbitGroup = new THREE.Group();
+        scene.add(orbitGroup);
+
+        // Función para crear forma de Corazón 3D (ExtrudeGeometry)
+        function createHeartGeometry() {
+            const shape = new THREE.Shape();
+            const x = 0, y = 0;
+            shape.moveTo(x + 0.25, y + 0.25);
+            shape.bezierCurveTo(x + 0.25, y + 0.25, x + 0.2, y, x, y);
+            shape.bezierCurveTo(x - 0.3, y, x - 0.3, y + 0.35, x - 0.3, y + 0.35);
+            shape.bezierCurveTo(x - 0.3, y + 0.55, x - 0.1, y + 0.77, x + 0.25, y + 0.95);
+            shape.bezierCurveTo(x + 0.6, y + 0.77, x + 0.8, y + 0.55, x + 0.8, y + 0.35);
+            shape.bezierCurveTo(x + 0.8, y + 0.35, x + 0.8, y, x + 0.5, y);
+            shape.bezierCurveTo(x + 0.35, y, x + 0.25, y + 0.25, x + 0.25, y + 0.25);
+
+            const extrudeSettings = {
+                depth: 0.1,
+                bevelEnabled: true,
+                bevelSegments: 3,
+                steps: 1,
+                bevelSize: 0.05,
+                bevelThickness: 0.05
+            };
+
+            const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            geo.center();
+            return geo;
+        }
+
+        const heartGeo = createHeartGeometry();
+        const orbitHeartCount = 16;
+        const orbitRadius = 4.3;
+
+        for (let i = 0; i < orbitHeartCount; i++) {
+            const angle = (i / orbitHeartCount) * Math.PI * 2;
+            const heartMat = new THREE.MeshStandardMaterial({
+                color: i % 2 === 0 ? 0xff0066 : 0xff33aa,
+                emissive: 0xff0044,
+                emissiveIntensity: 0.7,
+                roughness: 0.2,
+                metalness: 0.8
+            });
+
+            const mesh = new THREE.Mesh(heartGeo, heartMat);
+            mesh.scale.set(0.35, 0.35, 0.35);
+            mesh.rotation.z = Math.PI; // Orientación adecuada del corazón
+
+            const pivot = new THREE.Group();
+            pivot.rotation.z = angle;
+            mesh.position.set(orbitRadius, 0, 0);
+            pivot.add(mesh);
+
+            orbitGroup.add(pivot);
+        }
+
+        // --- SISTEMA DE CORAZONES FLOTANTES Y ESTRELLAS EN 3D ---
+        const floatingElementsGroup = new THREE.Group();
+        scene.add(floatingElementsGroup);
+
+        const floatingHearts = [];
+        const floatingCount = 35;
+
+        for (let i = 0; i < floatingCount; i++) {
+            const mat = new THREE.MeshStandardMaterial({
+                color: new THREE.Color().setHSL(Math.random() * 0.2 + 0.85, 1.0, 0.6),
+                emissive: 0xff0066,
+                emissiveIntensity: 0.5,
+                roughness: 0.3
+            });
+
+            const mesh = new THREE.Mesh(heartGeo, mat);
+            mesh.scale.setScalar(Math.random() * 0.25 + 0.15);
+            mesh.rotation.z = Math.PI;
+
+            mesh.position.set(
+                (Math.random() - 0.5) * 20,
+                (Math.random() - 0.5) * 20 - 5,
+                (Math.random() - 0.5) * 15
+            );
+
+            const speedY = Math.random() * 0.02 + 0.01;
+            const rotSpeed = (Math.random() - 0.5) * 0.03;
+            const oscSpeed = Math.random() * 0.02 + 0.01;
+
+            floatingHearts.push({ mesh, speedY, rotSpeed, oscSpeed, seed: Math.random() * 100 });
+            floatingElementsGroup.add(mesh);
+        }
+
+        // Polvo de Estrellas 3D
+        const starCount = 600;
+        const starGeo = new THREE.BufferGeometry();
+        const starPos = new Float32Array(starCount * 3);
+
+        for (let i = 0; i < starCount * 3; i += 3) {
+            starPos[i] = (Math.random() - 0.5) * 30;
+            starPos[i + 1] = (Math.random() - 0.5) * 30;
+            starPos[i + 2] = (Math.random() - 0.5) * 20;
+        }
+
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const starMat = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 0.08,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        const starField = new THREE.Points(starGeo, starMat);
+        scene.add(starField);
+
+        // --- SISTEMA DE FUEGOS ARTIFICIALES / EXPLOSIÓN PARA MAYBELIN ---
+        const fireworkParticles = [];
+
+        function triggerMaybelinExplosion() {
+            const particleCount = 250;
+            const colors = [0xff0066, 0xffd700, 0x00ffff, 0xff00ff, 0xff3300, 0xffffff];
+
+            for (let i = 0; i < particleCount; i++) {
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const mat = new THREE.MeshBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: 1
+                });
+
+                // Alternar entre pequeñas esferas y mini corazones
+                const isHeart = Math.random() > 0.4;
+                const mesh = new THREE.Mesh(isHeart ? heartGeo : new THREE.SphereGeometry(0.08, 8, 8), mat);
+                if (isHeart) {
+                    mesh.scale.set(0.2, 0.2, 0.2);
+                    mesh.rotation.z = Math.PI;
+                }
+
+                mesh.position.set(0, 0, 0);
+
+                // Dirección de disparo en 3D
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos((Math.random() * 2) - 1);
+                const speed = Math.random() * 0.22 + 0.08;
+
+                const vx = Math.sin(phi) * Math.cos(theta) * speed;
+                const vy = Math.sin(phi) * Math.sin(theta) * speed;
+                const vz = Math.cos(phi) * speed;
+
+                fireworkParticles.push({
+                    mesh,
+                    vx, vy, vz,
+                    life: 1.0,
+                    decay: Math.random() * 0.015 + 0.008
+                });
+
+                scene.add(mesh);
+            }
+
+            // Destello de luz central e impulso en el anillo
+            centerLight.intensity = 15;
+            mainTorus.scale.set(1.4, 1.4, 1.4);
+        }
+
+        // --- INTERACTIVIDAD AL TOCAR LA PANTALLA ---
+        function onTap(e) {
+            // Efecto suave de cambio de frase
+            textContainer.classList.remove("text-in");
+            textContainer.classList.add("text-out");
+
+            // Impulso físico suave en la cámara y luz
+            camera.position.z = 11.2;
+            centerLight.intensity = 8;
+
+            setTimeout(() => {
+                currentPhraseIndex = (currentPhraseIndex + 1) % phrases.length;
+                const currentText = phrases[currentPhraseIndex];
+
+                if (currentText === "Maybelin") {
+                    phraseDisplay.className = "neon-text-special";
+                    phraseDisplay.innerText = currentText;
+                    tapHint.innerHTML = `<span class="inline-block w-2.5 h-2.5 rounded-full bg-pink-400 animate-ping"></span> Toca para reiniciar`;
+                    triggerMaybelinExplosion();
+                } else {
+                    phraseDisplay.className = "neon-text";
+                    phraseDisplay.innerText = currentText;
+                    tapHint.innerHTML = `<span class="inline-block w-2.5 h-2.5 rounded-full bg-pink-400 animate-ping"></span> Toca la pantalla para cambiar`;
+                }
+
+                textContainer.classList.remove("text-out");
+                textContainer.classList.add("text-in");
+            }, 300);
+        }
+
+        window.addEventListener("pointerdown", onTap);
+
+        // --- BUCLE DE ANIMACIÓN 3D ---
+        let clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const elapsedTime = clock.getElapsedTime();
+
+            // 1. Animación del Anillo Central
+            ringGroup.rotation.z = elapsedTime * 0.3;
+            ringGroup.rotation.y = Math.sin(elapsedTime * 0.5) * 0.2;
+            innerKnot.rotation.x = elapsedTime * 0.8;
+            innerKnot.rotation.y = elapsedTime * 0.5;
+
+            // Pulso dinámico de escala
+            const pulse = Math.sin(elapsedTime * 2) * 0.05 + 1;
+            if (phrases[currentPhraseIndex] !== "Maybelin") {
+                mainTorus.scale.set(pulse, pulse, pulse);
+            } else {
+                mainTorus.scale.lerp(new THREE.Vector3(1.15, 1.15, 1.15), 0.05);
+            }
+
+            // Restablecer gradualmente la intensidad de luz
+            centerLight.intensity = THREE.MathUtils.lerp(centerLight.intensity, 3, 0.05);
+            camera.position.z = THREE.MathUtils.lerp(camera.position.z, 12, 0.05);
+
+            // 2. Rotación de los Corazones en Órbita
+            orbitGroup.rotation.z = -elapsedTime * 0.6;
+            orbitGroup.children.forEach((pivot, index) => {
+                const heartMesh = pivot.children[0];
+                heartMesh.rotation.y = elapsedTime * 2 + index;
+            });
+
+            // 3. Corazones Flotantes Ascendentes
+            floatingHearts.forEach(item => {
+                item.mesh.position.y += item.speedY;
+                item.mesh.position.x += Math.sin(elapsedTime + item.seed) * 0.015;
+                item.mesh.rotation.y += item.rotSpeed;
+
+                // Reiniciar al subir demasiado
+                if (item.mesh.position.y > 10) {
+                    item.mesh.position.y = -10;
+                    item.mesh.position.x = (Math.random() - 0.5) * 20;
+                }
+            });
+
+            // 4. Luces Neón Movimiento Dinámico
+            pointLight1.position.x = Math.sin(elapsedTime * 0.7) * 8;
+            pointLight1.position.y = Math.cos(elapsedTime * 0.5) * 8;
+
+            pointLight2.position.x = -Math.sin(elapsedTime * 0.6) * 8;
+            pointLight2.position.y = -Math.cos(elapsedTime * 0.8) * 8;
+
+            // 5. Animación de las Partículas de Fuegos Artificiales
+            for (let i = fireworkParticles.length - 1; i >= 0; i--) {
+                const p = fireworkParticles[i];
+                p.mesh.position.x += p.vx;
+                p.mesh.position.y += p.vy;
+                p.mesh.position.z += p.vz;
+
+                p.vy -= 0.002; // Gravedad suave
+                p.life -= p.decay;
+
+                p.mesh.material.opacity = Math.max(0, p.life);
+                p.mesh.scale.multiplyScalar(0.98);
+
+                if (p.life <= 0) {
+                    scene.remove(p.mesh);
+                    p.mesh.geometry.dispose();
+                    p.mesh.material.dispose();
+                    fireworkParticles.splice(i, 1);
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Iniciar experiencia
+        animate();
+    </script>
+</body>
+</html>
+```
